@@ -1,0 +1,16 @@
+# requirements.txt
+
+fastapi
+uvicorn
+openai
+psycopg[binary,pool]
+pgvector
+redis>=5.0.0
+pypdf
+python-multipart
+pydantic
+pydantic-settings
+tiktoken
+nltk
+pdfplumber
+

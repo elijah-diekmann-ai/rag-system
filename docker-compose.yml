@@ -1,0 +1,81 @@
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vc_rag
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d vc_rag"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vc_rag
+      DB_HOST: db
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1"
+      OPENROUTER_HTTP_REFERER: "http://localhost:8000"
+      OPENROUTER_APP_TITLE: "VC RAG System"
+      REDIS_URL: "redis://redis:6379/0"
+      REDIS_QUEUE_NAME: "vc_rag:ingest_jobs"
+      INGESTION_STORAGE_DIR: "/data/ingest"
+    volumes:
+      - ingest_storage:/data/ingest
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  worker:
+    build: .
+    command: ["python", "worker.py"]
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vc_rag
+      DB_HOST: db
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1"
+      OPENROUTER_HTTP_REFERER: "http://localhost:8000"
+      OPENROUTER_APP_TITLE: "VC RAG System"
+      REDIS_URL: "redis://redis:6379/0"
+      REDIS_QUEUE_NAME: "vc_rag:ingest_jobs"
+      INGESTION_STORAGE_DIR: "/data/ingest"
+    volumes:
+      - ingest_storage:/data/ingest
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  redis_data:
+  ingest_storage:
+
