@@ -21,7 +21,7 @@ UPLOAD_CHUNK_SIZE = 1024 * 1024
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Serendipity RAG System")
+app = FastAPI(title="RAG System")
 
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 

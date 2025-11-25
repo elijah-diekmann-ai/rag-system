@@ -175,7 +175,7 @@ async def generate_answer(query: str, sources: List[Source]) -> str:
         total_chars += len(addition)
 
     system_prompt = """
-You are an expert internal analyst for Serendipity Capital.
+You are an expert internal analyst.
 Answer strictly using the provided corporate knowledge base.
 Break your answer into atomic factual claims. Only include a claim if it is clearly
 supported by at least one source.
